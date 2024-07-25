@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class Buttonnfo : MonoBehaviour
+public class SkinInfo : MonoBehaviour
 {
     public int SkinId;
     public GameObject Skin_prefab;
@@ -17,22 +17,37 @@ public class Buttonnfo : MonoBehaviour
 
     private void Start()
     {
+        LoadPurchaseState();
         ButtonSelected.onClick.AddListener(OnSelect);
         ButtonBuy.onClick.AddListener(OnBuy);
+        UpdateButtonState();
+    }
 
+    public void LoadPurchaseState()
+    {
+        Isbuy = PlayerPrefs.GetInt("Skin_" + SkinId, 0) == 1;
+        Debug.Log("Loaded purchase state for Skin " + SkinId + ": " + Isbuy);
+    }
+
+    public void UpdateButtonState()
+    {
         if (Isbuy)
         {
             Cost.text = "Bought";
-            ButtonBuy.interactable = false;
+            
+        }
+        else
+        {
+
+            Cost.text = "Bought";
+            Cost.text = price.ToString();
+            ButtonBuy.interactable = Pref.IsEnoughCoints(price);
         }
     }
 
     private void OnSelect()
     {
-        if (Isbuy)
-        {
-            ShopManager.Instance.SelectItem(this);
-        }
+        ShopManager.Instance.SelectItem(this);
     }
 
     private void OnBuy()
@@ -41,9 +56,12 @@ public class Buttonnfo : MonoBehaviour
         {
             Pref.coins -= price;
             Isbuy = true;
-            ButtonBuy.interactable = false;
-            Cost.text = "Bought";
+            PlayerPrefs.SetInt("Skin_" + SkinId, 1);
+            PlayerPrefs.Save();
+            UpdateButtonState();
             ShopManager.Instance.UpdateUI();
+            ShopManager.Instance.SelectItem(this);
+            Debug.Log("Bought and selected Skin " + SkinId);
         }
     }
 

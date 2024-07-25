@@ -2324,7 +2324,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_items:
   - spawnRate: 1
-    amount: 2
+    amount: 50
     collectablePrefab: {fileID: 3056104832942325837, guid: 1a1c920a03c10c043b486779be4fff62, type: 3}
   - spawnRate: 0.35
     amount: 1
@@ -8187,6 +8187,7 @@ MonoBehaviour:
   - {fileID: 463535381}
   - {fileID: 1943057631}
   - {fileID: 373471566}
+  - {fileID: 1959802009}
   skinSpawnPoint: {fileID: 2020732167}
   selectedItem: {fileID: 0}
 --- !u!1 &976371222

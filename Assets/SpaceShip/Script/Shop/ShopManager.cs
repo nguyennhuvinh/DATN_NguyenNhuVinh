@@ -6,11 +6,9 @@ using UnityEngine.UI;
 public class ShopManager : MonoBehaviour
 {
     public static ShopManager Instance;
-
-    public List<Buttonnfo> items;
+    public List<SkinInfo> items;
     public Transform skinSpawnPoint;
-
-    public Buttonnfo selectedItem;
+    public SkinInfo selectedItem;
 
     private void Awake()
     {
@@ -19,47 +17,92 @@ public class ShopManager : MonoBehaviour
 
     private void Start()
     {
-        SelectItem(items[0]);
+        SetFirstSkinAsPurchased();
+        LoadPurchasedSkins();
+        LoadSelectedSkin();
         UpdateUI();
+        SpawnSelectedSkin();
     }
 
-    public void SelectItem(Buttonnfo item)
+    private void SetFirstSkinAsPurchased()
+    {
+        if (items.Count > 0 && !items[0].Isbuy)
+        {
+            items[0].Isbuy = true;
+            items[0].Cost.text = "Bought";
+            PlayerPrefs.SetInt("Skin_" + items[0].SkinId, 1);
+            PlayerPrefs.Save();
+        }
+    }
+
+    private void LoadPurchasedSkins()
+    {
+        foreach (var item in items)
+        {
+            item.LoadPurchaseState();
+        }
+    }
+
+    private void LoadSelectedSkin()
+    {
+        int selectedSkinId = PlayerPrefs.GetInt("SelectedSkinId", -1);
+        Debug.Log("Loaded SelectedSkinId: " + selectedSkinId);
+
+        if (selectedSkinId == -1 || !items.Exists(item => item.SkinId == selectedSkinId))
+        {
+            SelectItem(items[0]);
+            Debug.Log("Selected first skin: " + items[0].SkinId);
+        }
+        else
+        {
+            SkinInfo selectedItem = items.Find(item => item.SkinId == selectedSkinId);
+            SelectItem(selectedItem);
+            Debug.Log("Selected saved skin: " + selectedItem.SkinId);
+        }
+    }
+
+    public void SelectItem(SkinInfo item)
     {
         if (selectedItem != null)
         {
             selectedItem.SetOutline(false);
         }
-
         selectedItem = item;
         selectedItem.SetOutline(true);
 
-        if (selectedItem.Isbuy)
-        {
-            SpawnSelectedSkin();
-        }
+        PlayerPrefs.SetInt("SelectedSkinId", item.SkinId);
+        PlayerPrefs.Save();
+        Debug.Log("Saved SelectedSkinId: " + item.SkinId);
+
+        SpawnSelectedSkin();
     }
 
     public void UpdateUI()
     {
         foreach (var item in items)
         {
-            item.ButtonBuy.interactable = !item.Isbuy && Pref.IsEnoughCoints(item.price);
+            item.UpdateButtonState();
         }
     }
 
     public void SpawnSelectedSkin()
     {
-        if (selectedItem.Skin_prefab == null || skinSpawnPoint == null) return;
+        if (selectedItem == null || selectedItem.Skin_prefab == null || skinSpawnPoint == null)
+        {
+            Debug.LogError("Cannot spawn skin: " +
+                (selectedItem == null ? "Selected item is null" :
+                (selectedItem.Skin_prefab == null ? "Skin prefab is null" : "Spawn point is null")));
+            return;
+        }
 
-        // Destroy existing skin
         if (GameController.Instance.Player_Prefab != null)
         {
             Destroy(GameController.Instance.I_Player);
         }
 
-        // Instantiate new skin
         GameController.Instance.Player_Prefab = Instantiate(selectedItem.Skin_prefab, MapController.Instance.playerSpawnPoint.position, Quaternion.identity);
-        //GameController.Instance.I_Player.transform.SetParent(skinSpawnPoint);
         GameController.Instance.I_Player = GameController.Instance.Player_Prefab;
+
+        Debug.Log("Spawned skin: " + selectedItem.SkinId);
     }
 }
